@@ -121,7 +121,7 @@
   for (NSString *png in pngs) {
     UIImage *draggableImage = UIImageWithBundlePNG(png);
     UIImageView *draggableImageView = [[UIImageView alloc] initWithImage: draggableImage];
-    SEDraggable *draggable = [[SEDraggable alloc] initWithImageView: draggableImageView];
+    SEDraggable *draggable = [[SEDraggable alloc] initWithView: draggableImageView];
     [self configureDraggableObject: draggable];
   }
 }

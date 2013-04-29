@@ -50,17 +50,17 @@
   UIImageView *imageView = [[UIImageView alloc] initWithImage:image];
   imageView.frame = CGRectMake(0, 0, size.width, size.height);
   
-  self = [self initWithImageView:imageView];
+  self = [self initWithView:imageView];
   if (self) {
   }
   return self;
 }
 
-- (id) initWithImageView:(UIImageView *)imageView {
-  self = [self initWithFrame:imageView.frame];
+- (id) initWithView:(UIView *)view {
+  self = [self initWithFrame:view.frame];
   if (self) {
-    imageView.frame = CGRectMake(0, 0, imageView.frame.size.width, imageView.frame.size.height);
-    [self addSubview:imageView];
+    view.frame = CGRectMake(0, 0, view.frame.size.width, view.frame.size.height);
+    [self addSubview:view];
   }
   return self;
 }

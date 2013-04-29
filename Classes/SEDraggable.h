@@ -69,7 +69,7 @@
 @property (nonatomic, readonly) CGFloat firstY;
 
 - (id) initWithImage:(UIImage *)image andSize:(CGSize)size;
-- (id) initWithImageView:(UIImageView *)imageView;
+- (id) initWithView:(UIView *)view;
 - (void) addAllowedDropLocation:(SEDraggableLocation *)location;
 - (void) snapCenterToPoint:(CGPoint)point animated:(BOOL)animated completion:(void (^)(BOOL))completionBlock;
 
