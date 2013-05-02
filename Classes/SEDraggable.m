@@ -167,12 +167,10 @@
             }
         }
         
+        if ([self.delegate respondsToSelector:@selector(draggableObjectDidStopMoving:)])
+            [self.delegate draggableObjectDidStopMoving:self];
+        
         if (didStopMovingWithinLocation) {
-            if ([self.delegate respondsToSelector:@selector(draggableObjectDidStopMoving:)])
-                [self.delegate draggableObjectDidStopMoving:self];
-            
-            //      [dropLocation draggableObjectWasDroppedInside:self animated:YES];
-            
             if ([self.delegate respondsToSelector:@selector(draggableObject:didStopMovingWithinLocation:)])
                 [self.delegate draggableObject:self didStopMovingWithinLocation:dropLocation];
         }
