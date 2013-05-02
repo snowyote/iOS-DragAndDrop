@@ -31,19 +31,7 @@
       - (BOOL) draggableObject:(SEDraggable *)object shouldAskToEnterLocation:(SEDraggableLocation *)location withEntryMethod:(SEDraggableLocationEntryMethod)entryMethod;
 @end
 
-// keyed archiving constants
-#define kPAN_GESTURE_RECOGNIZER_KEY 						@"panGestureRecognizer"
-#define kCURRENT_LOCATION_KEY                   @"currentLocation"
-#define kHOME_LOCATION_KEY                      @"homeLocation"
-#define kPREVIOUS_LOCATION_KEY                  @"previousLocation"
-#define kDROPPABLE_LOCATIONS_KEY                @"droppableLocations"
-#define kDELEGATE_KEY                           @"delegate"
-#define kSHOULD_SNAP_BACK_TO_HOME_LOCATION_KEY 	@"shouldSnapBackToHomeLocation"
-#define kSHOULD_SNAP_BACK_TO_DRAG_ORIGIN_KEY    @"shouldSnapBackToDragOrigin"
-#define kFIRST_X_KEY                            @"firstX"
-#define kFIRST_Y_KEY                            @"firstY"
-
-@interface SEDraggable : UIView <SEDraggableLocationClient, UIGestureRecognizerDelegate, NSCoding> {
+@interface SEDraggable : UIView <SEDraggableLocationClient, UIGestureRecognizerDelegate> {
 
   SEDraggableLocation *_homeLocation;
   SEDraggableLocation __unsafe_unretained *_currentLocation;
