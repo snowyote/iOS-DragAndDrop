@@ -17,6 +17,7 @@
 
 @protocol SEDraggableEventResponder <NSObject>
   @optional
+      - (void) draggableObjectDidStartMoving:(SEDraggable *)object;
       - (void) draggableObjectDidMove:(SEDraggable *)object;
       - (void) draggableObjectDidStopMoving:(SEDraggable *)object;
 

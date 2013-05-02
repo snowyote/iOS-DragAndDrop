@@ -118,6 +118,9 @@
     
     // movement has just begun
     if (self.longPressGestureRecognizer.state == UIGestureRecognizerStateBegan) {
+        if ([self.delegate respondsToSelector:@selector(draggableObjectDidStartMoving:)])
+            [self.delegate draggableObjectDidStartMoving:self];
+
         // keep track of where the movement began
         _touchOrigin = CGPointMake(myCoordinates.x - self.center.x, myCoordinates.y - self.center.y);
     }
