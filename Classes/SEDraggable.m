@@ -21,6 +21,7 @@
 @interface SEDraggable ()
 - (void) handleDrag:(id)sender;
 - (BOOL) askToEnterLocation:(SEDraggableLocation *)location entryMethod:(SEDraggableLocationEntryMethod)entryMethod animated:(BOOL)animated;
+@property (nonatomic) CGPoint touchOrigin;
 @end
 
 @implementation SEDraggable
@@ -32,11 +33,6 @@
 @synthesize previousLocation = _previousLocation;
 @synthesize delegate = _delegate;
 @synthesize droppableLocations = _droppableLocations;
-@synthesize panGestureRecognizer = _panGestureRecognizer;
-@synthesize firstX;
-@synthesize firstY;
-
-
 
 #pragma mark- Lifecycle
 
@@ -69,11 +65,10 @@
 
 - (void) _SEDraggableInit {
     // pan gesture handling
-    self.panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handleDrag:)];
-    self.panGestureRecognizer.minimumNumberOfTouches = 1;
-    self.panGestureRecognizer.maximumNumberOfTouches = 1;
-    self.panGestureRecognizer.delegate = self;
-    [self addGestureRecognizer:self.panGestureRecognizer];
+    self.longPressGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:
+                                       self action:@selector(handleDrag:)];
+    self.longPressGestureRecognizer.delegate = self;
+    [self addGestureRecognizer:self.longPressGestureRecognizer];
     
     self.shouldSnapBackToHomeLocation = NO;
     self.shouldSnapBackToDragOrigin = YES;
@@ -102,11 +97,9 @@
 }
 
 - (void) dealloc {
-  _panGestureRecognizer.delegate = nil;
-  [self removeGestureRecognizer:_panGestureRecognizer];
+    _longPressGestureRecognizer.delegate = nil;
+    [self removeGestureRecognizer:_longPressGestureRecognizer];
 }
-
-
 
 #pragma mark- Convenience methods
 
@@ -119,82 +112,78 @@
 #pragma mark- UI events
 
 - (void) handleDrag:(id)sender {
-  CGPoint translatedPoint = [self.panGestureRecognizer translationInView:self.superview];
-  CGPoint myCoordinates   = [self.panGestureRecognizer locationInView:self.superview];
-  
-  [self.superview bringSubviewToFront:self];
-  
-  // movement has just begun
-  if (self.panGestureRecognizer.state == UIGestureRecognizerStateBegan) {
-    // keep track of where the movement began
-    firstX = [self center].x;
-    firstY = [self center].y;
-  }
-  translatedPoint = CGPointMake(firstX + translatedPoint.x, firstY + translatedPoint.y);
-  [self setCenter:translatedPoint];
-  
-  // movement is currently in process
-  if (self.panGestureRecognizer.state == UIGestureRecognizerStateChanged) {
-    if ([self.delegate respondsToSelector:@selector(draggableObjectDidMove:)])
-      [self.delegate draggableObjectDidMove:self];
     
-    if (self.droppableLocations.count > 0) {
-      for (SEDraggableLocation *location in self.droppableLocations) {
-        CGPoint myWindowCoordinates = [self.superview convertPoint:myCoordinates toView:nil];
-        if ([location pointIsInsideResponsiveBounds:myWindowCoordinates]) {
-          [location draggableObjectDidMoveWithinBounds:self];
-          if ([self.delegate respondsToSelector:@selector(draggableObject:didMoveWithinLocation:)]) {
-            [self.delegate draggableObject:self didMoveWithinLocation:location];
-          }
+    CGPoint myCoordinates = [self.longPressGestureRecognizer locationOfTouch:0 inView:self.superview];
+    [self.superview bringSubviewToFront:self];
+    
+    // movement has just begun
+    if (self.longPressGestureRecognizer.state == UIGestureRecognizerStateBegan) {
+        // keep track of where the movement began
+        _touchOrigin = CGPointMake(myCoordinates.x - self.center.x, myCoordinates.y - self.center.y);
+    }
+
+    CGPoint translatedPoint = CGPointMake(myCoordinates.x - _touchOrigin.x, myCoordinates.y - _touchOrigin.y);
+    [self setCenter:translatedPoint];
+    
+    // movement is currently in process
+    if (self.longPressGestureRecognizer.state == UIGestureRecognizerStateChanged) {
+        if ([self.delegate respondsToSelector:@selector(draggableObjectDidMove:)])
+            [self.delegate draggableObjectDidMove:self];
+        
+        if (self.droppableLocations.count > 0) {
+            for (SEDraggableLocation *location in self.droppableLocations) {
+                CGPoint myWindowCoordinates = [self.superview convertPoint:myCoordinates toView:nil];
+                if ([location pointIsInsideResponsiveBounds:myWindowCoordinates]) {
+                    [location draggableObjectDidMoveWithinBounds:self];
+                    if ([self.delegate respondsToSelector:@selector(draggableObject:didMoveWithinLocation:)]) {
+                        [self.delegate draggableObject:self didMoveWithinLocation:location];
+                    }
+                }
+                else {
+                    [location draggableObjectDidMoveOutsideBounds:self];
+                }
+            }
+        }
+    }
+    
+    // movement has just ended
+    if (self.longPressGestureRecognizer.state == UIGestureRecognizerStateEnded) {
+        BOOL didStopMovingWithinLocation = NO;
+        SEDraggableLocation *dropLocation = nil;
+        
+        for (SEDraggableLocation *location in self.droppableLocations) {
+            CGPoint myWindowCoordinates = [self.superview convertPoint:myCoordinates toView:nil];
+            if ([location pointIsInsideResponsiveBounds:myWindowCoordinates]) {
+                // the draggable will ask for entry into every draggable location whose bounds it is inside until the first YES, at which point the search stops
+                BOOL allowedEntry = [self askToEnterLocation:location entryMethod:SEDraggableLocationEntryMethodWasDropped animated:YES];
+                if (allowedEntry) {
+                    didStopMovingWithinLocation = YES;
+                    dropLocation = location;
+                    break;
+                }
+            }
+        }
+        
+        if (didStopMovingWithinLocation) {
+            if ([self.delegate respondsToSelector:@selector(draggableObjectDidStopMoving:)])
+                [self.delegate draggableObjectDidStopMoving:self];
+            
+            //      [dropLocation draggableObjectWasDroppedInside:self animated:YES];
+            
+            if ([self.delegate respondsToSelector:@selector(draggableObject:didStopMovingWithinLocation:)])
+                [self.delegate draggableObject:self didStopMovingWithinLocation:dropLocation];
         }
         else {
-          [location draggableObjectDidMoveOutsideBounds:self];
+            if (self.shouldSnapBackToHomeLocation) {
+                // @@TODO: should not hard-code "yes" here
+                [self askToSnapBackToLocation:self.homeLocation animated:YES];
+            }
+            else if (self.shouldSnapBackToDragOrigin) {
+                [self askToSnapBackToLocation:self.currentLocation animated:YES];
+            }
         }
-      }
     }
-  }
-  
-  // movement has just ended
-  if (self.panGestureRecognizer.state == UIGestureRecognizerStateEnded) {
-    BOOL didStopMovingWithinLocation = NO;
-    SEDraggableLocation *dropLocation = nil;
-    
-    for (SEDraggableLocation *location in self.droppableLocations) {
-      CGPoint myWindowCoordinates = [self.superview convertPoint:myCoordinates toView:nil];
-      if ([location pointIsInsideResponsiveBounds:myWindowCoordinates]) {
-        // the draggable will ask for entry into every draggable location whose bounds it is inside until the first YES, at which point the search stops
-        BOOL allowedEntry = [self askToEnterLocation:location entryMethod:SEDraggableLocationEntryMethodWasDropped animated:YES];
-        if (allowedEntry) {
-          didStopMovingWithinLocation = YES;
-          dropLocation = location;
-          break;
-        }
-      }
-    }
-    
-    if (didStopMovingWithinLocation) {
-      if ([self.delegate respondsToSelector:@selector(draggableObjectDidStopMoving:)])
-        [self.delegate draggableObjectDidStopMoving:self];
-      
-//      [dropLocation draggableObjectWasDroppedInside:self animated:YES];
-      
-      if ([self.delegate respondsToSelector:@selector(draggableObject:didStopMovingWithinLocation:)])
-        [self.delegate draggableObject:self didStopMovingWithinLocation:dropLocation];
-    }
-    else {
-      if (self.shouldSnapBackToHomeLocation) {
-        // @@TODO: should not hard-code "yes" here
-        [self askToSnapBackToLocation:self.homeLocation animated:YES];
-      }
-      else if (self.shouldSnapBackToDragOrigin) {
-        [self askToSnapBackToLocation:self.currentLocation animated:YES];
-      }
-    }
-    
-  }
 }
-
-
 
 #pragma mark- SEDraggableLocationClient (notifications about the location's decision)
 

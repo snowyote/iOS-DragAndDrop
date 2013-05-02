@@ -40,12 +40,10 @@
   UIPanGestureRecognizer *_panGestureRecognizer;
   BOOL _shouldSnapBackToHomeLocation;
   BOOL _shouldSnapBackToDragOrigin;
-  CGFloat firstX;
-  CGFloat firstY;
   id <SEDraggableEventResponder> __unsafe_unretained _delegate;
 }
 
-@property (nonatomic, readwrite, strong) UIPanGestureRecognizer *panGestureRecognizer;
+@property (nonatomic, readwrite, strong) UILongPressGestureRecognizer *longPressGestureRecognizer;
 @property (nonatomic, readwrite, unsafe_unretained) SEDraggableLocation *currentLocation;
 @property (nonatomic, readwrite, strong) SEDraggableLocation *homeLocation; // @@TODO: make sure this isn't causing retain cycles mmMmMMMmMMmm
 @property (nonatomic, readwrite, unsafe_unretained) SEDraggableLocation *previousLocation;
@@ -53,8 +51,6 @@
 @property (nonatomic, readwrite, unsafe_unretained) id <SEDraggableEventResponder> delegate;
 @property (nonatomic, readwrite) BOOL shouldSnapBackToHomeLocation;
 @property (nonatomic, readwrite) BOOL shouldSnapBackToDragOrigin;
-@property (nonatomic, readonly) CGFloat firstX;
-@property (nonatomic, readonly) CGFloat firstY;
 
 - (id) initWithImage:(UIImage *)image andSize:(CGSize)size;
 - (id) initWithView:(UIView *)view;
