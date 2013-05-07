@@ -122,6 +122,7 @@
             [self.delegate draggableObjectDidStartMoving:self];
 
         // keep track of where the movement began
+        myCoordinates = [self.longPressGestureRecognizer locationOfTouch:0 inView:self.superview];
         _touchOrigin = CGPointMake(myCoordinates.x - self.center.x, myCoordinates.y - self.center.y);
     }
 
