@@ -58,6 +58,7 @@
 - (void) addAllowedDropLocation:(SEDraggableLocation *)location;
 - (void) snapCenterToPoint:(CGPoint)point animated:(BOOL)animated completion:(void (^)(BOOL))completionBlock;
 
+- (void) handleDrag:(id)sender;
 - (void) askToDropIntoLocation:(SEDraggableLocation *)location animated:(BOOL)animated;
 - (void) askToSnapBackToLocation:(SEDraggableLocation *)location animated:(BOOL)animated;
 

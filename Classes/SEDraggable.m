@@ -19,7 +19,6 @@
 @end
 
 @interface SEDraggable ()
-- (void) handleDrag:(id)sender;
 - (BOOL) askToEnterLocation:(SEDraggableLocation *)location entryMethod:(SEDraggableLocationEntryMethod)entryMethod animated:(BOOL)animated;
 @property (nonatomic) CGPoint touchOrigin;
 @end
@@ -111,18 +110,18 @@
 
 #pragma mark- UI events
 
-- (void) handleDrag:(id)sender {
+- (void) handleDrag:(UILongPressGestureRecognizer*)recognizer {
     
-    CGPoint myCoordinates = [self.longPressGestureRecognizer locationOfTouch:0 inView:self.superview];
+    CGPoint myCoordinates = [recognizer locationOfTouch:0 inView:self.superview];
     [self.superview bringSubviewToFront:self];
     
     // movement has just begun
-    if (self.longPressGestureRecognizer.state == UIGestureRecognizerStateBegan) {
+    if (recognizer.state == UIGestureRecognizerStateBegan) {
         if ([self.delegate respondsToSelector:@selector(draggableObjectDidStartMoving:)])
             [self.delegate draggableObjectDidStartMoving:self];
 
         // keep track of where the movement began
-        myCoordinates = [self.longPressGestureRecognizer locationOfTouch:0 inView:self.superview];
+        myCoordinates = [recognizer locationOfTouch:0 inView:self.superview];
         _touchOrigin = CGPointMake(myCoordinates.x - self.center.x, myCoordinates.y - self.center.y);
     }
 
@@ -130,7 +129,7 @@
     [self setCenter:translatedPoint];
     
     // movement is currently in process
-    if (self.longPressGestureRecognizer.state == UIGestureRecognizerStateChanged) {
+    if (recognizer.state == UIGestureRecognizerStateChanged) {
         if ([self.delegate respondsToSelector:@selector(draggableObjectDidMove:)])
             [self.delegate draggableObjectDidMove:self];
         
@@ -151,7 +150,7 @@
     }
     
     // movement has just ended
-    if (self.longPressGestureRecognizer.state == UIGestureRecognizerStateEnded) {
+    if (recognizer.state == UIGestureRecognizerStateEnded) {
         BOOL didStopMovingWithinLocation = NO;
         SEDraggableLocation *dropLocation = nil;
         
